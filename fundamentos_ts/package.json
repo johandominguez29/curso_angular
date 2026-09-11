@@ -1,0 +1,8 @@
+{
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "build": "tsc",
+    "start": "npm run build && node dist/main.js"
+  }
+}
