@@ -1,12 +1,20 @@
-import { Component, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { ResumenActividades } from './actividades/resumen-actividades/resumen-actividades';
+import { TarjetaActividad } from './actividades/tarjeta-actividad/tarjeta-actividad';
+import { ListaActividades } from './actividades/lista-actividades/lista-actividades';
 
 @Component({
-  imports: [RouterOutlet],
   selector: 'app-root',
-  styleUrl: './app.css',
+  standalone: true,
+  imports: [
+    RouterOutlet,
+    ResumenActividades,
+    TarjetaActividad,
+    ListaActividades
+  ],
   templateUrl: './app.html',
+  styleUrl: './app.css',
 })
-export class App {
-  protected readonly title = signal('panel-actividades');
-}
+export class App {}
+
