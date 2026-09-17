@@ -16,21 +16,24 @@ export class ListaActividades {
       titulo: 'Preparar estructura HTML',
       estado: 'completada',
       prioridad: 'alta',
-      creadaEn: '2026-08-10'
+      creadaEn: '2026-08-10',
+      destacada: false
     },
     {
       id: 2,
       titulo: 'Revisar contraste',
       estado: 'en_progreso',
       prioridad: 'media',
-      creadaEn: '2026-08-12'
+      creadaEn: '2026-08-12',
+      destacada: false
     },
     {
       id: 3,
       titulo: 'Practicar TypeScript',
       estado: 'pendiente',
       prioridad: 'alta',
-      creadaEn: '2026-08-14'
+      creadaEn: '2026-08-14',
+      destacada: false
     }
   ];
 }

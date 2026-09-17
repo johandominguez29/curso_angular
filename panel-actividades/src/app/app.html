@@ -1,17 +1,19 @@
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-<!-- * * * * * * * * * * * The content below * * * * * * * * * * * -->
-<!-- * * * * * * * * * * is only a placeholder * * * * * * * * * * -->
-<!-- * * * * * * * * * * and can be replaced.  * * * * * * * * * * -->
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-<!-- * * * * * * * * * Delete the template below * * * * * * * * * -->
-<!-- * * * * * * * to get started with your project! * * * * * * * -->
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+<header class="cabecera">
+  <div class="contenedor">
+    <p class="marca">Panel de actividades</p>
+  </div>
+</header>
 
-<section>
+<main id="contenido" class="contenedor">
   <h1>Panel de actividades</h1>
-  <p>Mi primera modificación Angular funciona.</p>
-</section>
 
-<router-outlet />
+  <app-resumen-actividades />
+
+  <app-tarjeta-actividad />
 
   <app-lista-actividades />
+
+  <app-tablero-prioridades />
+</main>
+
+<router-outlet />
