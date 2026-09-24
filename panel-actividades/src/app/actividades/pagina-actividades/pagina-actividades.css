@@ -1,0 +1,16 @@
+.tablero { display: flex; flex-direction: column; gap: 1.5rem; }
+
+.metricas,
+
+
+.lista { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.75rem; }
+
+.tarjeta,
+.metricas li,
+.campo { min-width: 0; }
+
+
+
+.tarjeta.destacada { border-left-color: #545454; background: #f6f6f6; }
+.tarjeta.seleccionada { outline: 2px solid #545454; outline-offset: 2px; }
+

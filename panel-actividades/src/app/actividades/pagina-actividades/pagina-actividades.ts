@@ -11,14 +11,26 @@ import {
   FiltroEstado,
   FiltroPrioridad,
   Prioridad,
-} from '../modelos/actividad';
+} from '../../modelos/actividad';
+
+import { ResumenActividades } from '../resumen-actividades/resumen-actividades';
+import { ListaActividades } from '../lista-actividades/lista-actividades';
+import { FiltrosActividades } from '../filtros-actividades/filtros-actividades';
+import { PanelSeccion } from '../../compartido/panel-seccion/panel-seccion';
 
 @Component({
-  selector: 'app-tablero-prioridades',
-  templateUrl: './tablero-prioridades.html',
-  styleUrl: './tablero-prioridades.css',
+  selector: 'app-pagina-actividades',
+  standalone: true,
+  imports: [
+    ResumenActividades,
+    ListaActividades,
+    FiltrosActividades,
+    PanelSeccion,
+  ],
+  templateUrl: './pagina-actividades.html',
+  styleUrl: './pagina-actividades.css',
 })
-export class TableroPrioridades {
+export class PaginaActividades {
   private readonly orden: Record<Prioridad, number> = {
     alta: 0,
     media: 1,
@@ -204,27 +216,9 @@ export class TableroPrioridades {
     );
   }
 
-  protected buscar(evento: Event): void {
-    this.termino.set(
-      (evento.target as HTMLInputElement).value,
-    );
-  }
-
-  protected cambiarFiltroEstado(
-    evento: Event,
-  ): void {
-    this.filtroEstado.set(
-      (evento.target as HTMLSelectElement)
-        .value as FiltroEstado,
-    );
-  }
-
-  protected cambiarFiltroPrioridad(
-    evento: Event,
-  ): void {
-    this.filtroPrioridad.set(
-      (evento.target as HTMLSelectElement)
-        .value as FiltroPrioridad,
+  protected seleccionar(id: number): void {
+    this.seleccionadaId.update(
+      (actual) => (actual === id ? null : id),
     );
   }
 
@@ -232,12 +226,6 @@ export class TableroPrioridades {
     this.termino.set('');
     this.filtroEstado.set('todas');
     this.filtroPrioridad.set('todas');
-  }
-
-  protected seleccionar(id: number): void {
-    this.seleccionadaId.update(
-      (actual) => (actual === id ? null : id),
-    );
   }
 
   protected restablecer(): void {
