@@ -14,3 +14,10 @@
 .tarjeta.destacada { border-left-color: #545454; background: #f6f6f6; }
 .tarjeta.seleccionada { outline: 2px solid #545454; outline-offset: 2px; }
 
+.aviso {
+  margin: 0;
+  border: 1px solid #949494;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+}
+
