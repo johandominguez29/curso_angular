@@ -2,15 +2,22 @@
   @for (actividad of actividades(); track actividad.id) {
 
     <li>
-      <app-tarjeta-actividad
-        [actividad]="actividad"
-        [seleccionada]="seleccionadaId() === actividad.id"
-        (seleccionCambiada)="seleccionCambiada.emit($event)"
-        (destacadoCambiado)="destacadoCambiado.emit($event)"
-        (avanceSolicitado)="avanceSolicitado.emit($event)"
-        (eliminacionSolicitada)="eliminacionSolicitada.emit($event)"
-      />
-    </li>
+  <app-tarjeta-actividad
+    [actividad]="actividad"
+    [seleccionada]="seleccionadaId() === actividad.id"
+    (seleccionCambiada)="seleccionCambiada.emit($event)"
+    (destacadoCambiado)="destacadoCambiado.emit($event)"
+    (avanceSolicitado)="avanceSolicitado.emit($event)"
+    (eliminacionSolicitada)="eliminacionSolicitada.emit($event)"
+  />
+
+  <a
+    class="enlace-detalle"
+    [routerLink]="['/actividades', actividad.id]"
+  >
+    Ver detalle de {{ actividad.titulo }}
+  </a>
+</li>
 
   } @empty {
 

@@ -31,3 +31,9 @@ button:disabled {
   outline: 2px solid #545454;
   outline-offset: 2px;
 }
+
+.enlace-detalle {
+  font-size: 0.85rem;
+  display: inline-block;
+  margin-top: 0.25rem;
+}

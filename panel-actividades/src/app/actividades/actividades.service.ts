@@ -10,6 +10,8 @@ import { AlmacenamientoService } from '../compartido/almacenamiento.service';
 import {
   Actividad,
   EstadoActividad,
+  LIMITES,
+  Prioridad,
   esColeccionActividades,
 } from '../modelos/actividad';
 
@@ -23,6 +25,7 @@ const INICIALES: readonly Actividad[] = [
     prioridad: 'alta',
     creadaEn: '2026-08-10',
     destacada: false,
+    descripcion: '',
   },
   {
     id: 2,
@@ -31,6 +34,7 @@ const INICIALES: readonly Actividad[] = [
     prioridad: 'media',
     creadaEn: '2026-08-12',
     destacada: true,
+    descripcion: '',
   },
   {
     id: 3,
@@ -39,6 +43,7 @@ const INICIALES: readonly Actividad[] = [
     prioridad: 'alta',
     creadaEn: '2026-08-14',
     destacada: false,
+    descripcion: '',
   },
   {
     id: 4,
@@ -47,6 +52,7 @@ const INICIALES: readonly Actividad[] = [
     prioridad: 'baja',
     creadaEn: '2026-08-16',
     destacada: false,
+    descripcion: '',
   },
   {
     id: 5,
@@ -55,6 +61,7 @@ const INICIALES: readonly Actividad[] = [
     prioridad: 'media',
     creadaEn: '2026-08-18',
     destacada: false,
+    descripcion: '',
   },
 ];
 
@@ -107,22 +114,23 @@ export class ActividadesService {
       this.total() === 0
         ? 0
         : Math.round(
-            (this.completadas() / this.total()) * 100,
+            (this.completadas() / this.total()) *
+              100,
           ),
   );
 
   constructor() {
-  this.cargar();
+    this.cargar();
 
-  window.addEventListener(
-    'storage',
-    (evento) => {
-      if (evento.key === CLAVE) {
-        this.cargar();
-      }
-    },
-  );
-}
+    window.addEventListener(
+      'storage',
+      (evento) => {
+        if (evento.key === CLAVE) {
+          this.cargar();
+        }
+      },
+    );
+  }
 
   buscarPorId(
     id: number,
@@ -130,6 +138,76 @@ export class ActividadesService {
     return this.lista().find(
       (a) => a.id === id,
     );
+  }
+
+  crear(
+    titulo: string,
+    descripcion: string,
+    prioridad: Prioridad,
+  ): Actividad | null {
+    const limpio = titulo.trim();
+
+    if (
+      !this.tituloAceptable(
+        limpio,
+        null,
+      )
+    ) {
+      return null;
+    }
+
+    const nueva: Actividad = {
+      id: this.siguienteId(),
+      titulo: limpio,
+      descripcion: descripcion.trim(),
+      estado: 'pendiente',
+      prioridad,
+      creadaEn: new Date()
+        .toISOString()
+        .slice(0, 10),
+      destacada: false,
+    };
+
+    this.aplicar(
+      (actual) => [...actual, nueva],
+    );
+
+    return nueva;
+  }
+
+  actualizar(
+    id: number,
+    titulo: string,
+    descripcion: string,
+    prioridad: Prioridad,
+  ): boolean {
+    const limpio = titulo.trim();
+
+    if (
+      !this.buscarPorId(id) ||
+      !this.tituloAceptable(
+        limpio,
+        id,
+      )
+    ) {
+      return false;
+    }
+
+    this.aplicar((actual) =>
+      actual.map((a) =>
+        a.id === id
+          ? {
+              ...a,
+              titulo: limpio,
+              descripcion:
+                descripcion.trim(),
+              prioridad,
+            }
+          : a,
+      ),
+    );
+
+    return true;
   }
 
   alternarDestacada(
@@ -155,7 +233,9 @@ export class ActividadesService {
         a.id === id
           ? {
               ...a,
-              estado: this.siguienteEstado(a.estado),
+              estado: this.siguienteEstado(
+                a.estado,
+              ),
             }
           : a,
       ),
@@ -166,12 +246,52 @@ export class ActividadesService {
     id: number,
   ): void {
     this.aplicar((actual) =>
-      actual.filter((a) => a.id !== id),
+      actual.filter(
+        (a) => a.id !== id,
+      ),
     );
   }
 
   vaciar(): void {
     this.aplicar(() => []);
+  }
+
+  private tituloAceptable(
+    limpio: string,
+    salvo: number | null,
+  ): boolean {
+    if (
+      limpio.length <
+        LIMITES.tituloMin ||
+      limpio.length >
+        LIMITES.tituloMax
+    ) {
+      return false;
+    }
+
+    const normal =
+      limpio.toLocaleLowerCase('es');
+
+    return !this.lista().some(
+      (a) =>
+        a.id !== salvo &&
+        a.titulo.toLocaleLowerCase(
+          'es',
+        ) === normal,
+    );
+  }
+
+    private siguienteId(): number {
+    return (
+      this.lista().reduce(
+        (mayor, a) =>
+          Math.max(
+            mayor,
+            a.id,
+          ),
+        0,
+      ) + 1
+    );
   }
 
   private aplicar(

@@ -4,10 +4,12 @@ import { Actividad } from '../../modelos/actividad';
 
 import { TarjetaActividad } from '../tarjeta-actividad/tarjeta-actividad';
 
+import { RouterLink } from '@angular/router';
+
 @Component({
   selector: 'app-lista-actividades',
   standalone: true,
-  imports: [TarjetaActividad],
+  imports: [TarjetaActividad, RouterLink],
   templateUrl: './lista-actividades.html',
   styleUrl: './lista-actividades.css',
 })
