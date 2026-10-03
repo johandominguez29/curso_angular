@@ -61,6 +61,27 @@ export const routes: Routes = [
         (m) => m.PaginaEstadisticas,
       ),
   },
+  
+  {
+  path: 'sugerencias',
+  title: 'Sugerencias',
+  loadComponent: () =>
+    import(
+      './sugerencias/pagina-sugerencias/pagina-sugerencias'
+    ).then(
+      (m) => m.PaginaSugerencias,
+    ),
+},
+
+  {
+    path: 'sugerencias',
+    title: 'Sugerencias',
+    loadComponent: () =>
+      import('./sugerencias/pagina-sugerencias/pagina-sugerencias').then(
+        (m) => m.PaginaSugerencias,
+      ),
+  },
+
 
   {
     path: '**',

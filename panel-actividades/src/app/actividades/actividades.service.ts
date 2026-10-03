@@ -1,88 +1,46 @@
 import {
+  Injectable,
   computed,
   inject,
-  Injectable,
   signal,
 } from '@angular/core';
 
-import { AlmacenamientoService } from '../compartido/almacenamiento.service';
+import {
+  catchError,
+  finalize,
+  of,
+  retry,
+  timer,
+} from 'rxjs';
+
+import { ActividadesApi } from '../api/actividades-api';
+import { mensajeDe } from '../api/mensajes';
 
 import {
   Actividad,
   EstadoActividad,
   LIMITES,
   Prioridad,
-  esColeccionActividades,
 } from '../modelos/actividad';
-
-const CLAVE = 'panel.actividades.v1';
-
-const INICIALES: readonly Actividad[] = [
-  {
-    id: 1,
-    titulo: 'Preparar estructura HTML',
-    estado: 'completada',
-    prioridad: 'alta',
-    creadaEn: '2026-08-10',
-    destacada: false,
-    descripcion: '',
-  },
-  {
-    id: 2,
-    titulo: 'Revisar contraste',
-    estado: 'en_progreso',
-    prioridad: 'media',
-    creadaEn: '2026-08-12',
-    destacada: true,
-    descripcion: '',
-  },
-  {
-    id: 3,
-    titulo: 'Practicar TypeScript',
-    estado: 'pendiente',
-    prioridad: 'alta',
-    creadaEn: '2026-08-14',
-    destacada: false,
-    descripcion: '',
-  },
-  {
-    id: 4,
-    titulo: 'Comprobar vista estrecha',
-    estado: 'pendiente',
-    prioridad: 'baja',
-    creadaEn: '2026-08-16',
-    destacada: false,
-    descripcion: '',
-  },
-  {
-    id: 5,
-    titulo: 'Ejecutar el build',
-    estado: 'pendiente',
-    prioridad: 'media',
-    creadaEn: '2026-08-18',
-    destacada: false,
-    descripcion: '',
-  },
-];
 
 @Injectable({
   providedIn: 'root',
 })
 export class ActividadesService {
-  private readonly almacen =
-    inject(AlmacenamientoService);
+  private readonly api =
+    inject(ActividadesApi);
 
-  private readonly lista = signal<Actividad[]>(
-    INICIALES.map((a) => ({ ...a })),
-  );
+  private readonly lista =
+    signal<Actividad[]>([]);
 
   readonly actividades =
     this.lista.asReadonly();
 
-  readonly aviso = signal('');
-
-  readonly sinGuardar =
+  readonly cargando =
     signal(false);
+
+  readonly error =
+    signal('');
 
   readonly total = computed(
     () => this.lista().length,
@@ -114,22 +72,61 @@ export class ActividadesService {
       this.total() === 0
         ? 0
         : Math.round(
-            (this.completadas() / this.total()) *
+            (this.completadas() /
+              this.total()) *
               100,
           ),
   );
 
   constructor() {
     this.cargar();
+  }
 
-    window.addEventListener(
-      'storage',
-      (evento) => {
-        if (evento.key === CLAVE) {
-          this.cargar();
-        }
-      },
-    );
+    cargar(): void {
+    this.cargando.set(true);
+
+    this.error.set('');
+
+    this.api
+      .listar()
+      .pipe(
+        retry({
+          count: 2,
+          delay: (
+            _,
+            intento,
+          ) =>
+            timer(
+              intento * 300,
+            ),
+        }),
+
+        catchError(
+          (e: unknown) => {
+            this.error.set(
+              mensajeDe(e),
+            );
+
+            return of<Actividad[]>(
+              [],
+            );
+          },
+        ),
+
+        finalize(() =>
+          this.cargando.set(
+            false,
+          ),
+        ),
+      )
+      .subscribe(
+        (
+          actividades: Actividad[],
+        ) =>
+          this.lista.set(
+            actividades,
+          ),
+      );
   }
 
   buscarPorId(
@@ -156,10 +153,11 @@ export class ActividadesService {
       return null;
     }
 
-    const nueva: Actividad = {
+    const provisional: Actividad = {
       id: this.siguienteId(),
       titulo: limpio,
-      descripcion: descripcion.trim(),
+      descripcion:
+        descripcion.trim(),
       estado: 'pendiente',
       prioridad,
       creadaEn: new Date()
@@ -168,11 +166,42 @@ export class ActividadesService {
       destacada: false,
     };
 
-    this.aplicar(
-      (actual) => [...actual, nueva],
+    this.lista.update(
+      (actual) => [
+        ...actual,
+        provisional,
+      ],
     );
 
-    return nueva;
+    this.api
+      .crear({
+        titulo: limpio,
+        descripcion:
+          descripcion.trim(),
+        prioridad,
+        completada: false,
+      })
+      .pipe(
+        catchError(
+          (e: unknown) =>
+            this.deshacer(
+              provisional.id,
+              e,
+            ),
+        ),
+      )
+      .subscribe(
+        (guardada) => {
+          if (guardada) {
+            this.reemplazar(
+              provisional.id,
+              guardada,
+            );
+          }
+        },
+      );
+
+    return provisional;
   }
 
   actualizar(
@@ -183,8 +212,11 @@ export class ActividadesService {
   ): boolean {
     const limpio = titulo.trim();
 
+    const anterior =
+      this.buscarPorId(id);
+
     if (
-      !this.buscarPorId(id) ||
+      !anterior ||
       !this.tituloAceptable(
         limpio,
         id,
@@ -193,19 +225,17 @@ export class ActividadesService {
       return false;
     }
 
-    this.aplicar((actual) =>
-      actual.map((a) =>
-        a.id === id
-          ? {
-              ...a,
-              titulo: limpio,
-              descripcion:
-                descripcion.trim(),
-              prioridad,
-            }
-          : a,
-      ),
+    this.aplicarLocal(
+      id,
+      {
+        titulo: limpio,
+        descripcion:
+          descripcion.trim(),
+        prioridad,
+      },
     );
+
+    this.enviar(id);
 
     return true;
   }
@@ -213,47 +243,166 @@ export class ActividadesService {
   alternarDestacada(
     id: number,
   ): void {
-    this.aplicar((actual) =>
-      actual.map((a) =>
-        a.id === id
-          ? {
-              ...a,
-              destacada: !a.destacada,
-            }
-          : a,
-      ),
+    this.aplicarLocal(
+      id,
+      {
+        destacada:
+          !this.buscarPorId(id)
+            ?.destacada,
+      },
     );
   }
 
   avanzarEstado(
     id: number,
   ): void {
-    this.aplicar((actual) =>
-      actual.map((a) =>
-        a.id === id
-          ? {
-              ...a,
-              estado: this.siguienteEstado(
-                a.estado,
-              ),
-            }
-          : a,
-      ),
+    const actividad =
+      this.buscarPorId(id);
+
+    if (!actividad) {
+      return;
+    }
+
+    this.aplicarLocal(
+      id,
+      {
+        estado:
+          this.siguienteEstado(
+            actividad.estado,
+          ),
+      },
     );
+
+    this.enviar(id);
   }
 
   eliminar(
     id: number,
   ): void {
-    this.aplicar((actual) =>
-      actual.filter(
-        (a) => a.id !== id,
-      ),
+    const anterior =
+      this.buscarPorId(id);
+
+    if (!anterior) {
+      return;
+    }
+
+    this.lista.update(
+      (actual) =>
+        actual.filter(
+          (a) => a.id !== id,
+        ),
     );
+
+    this.api
+      .eliminar(id)
+      .pipe(
+        catchError(
+          (e: unknown) => {
+            this.error.set(
+              mensajeDe(e),
+            );
+
+            this.lista.update(
+              (actual) => [
+                ...actual,
+                anterior,
+              ],
+            );
+
+            return of(undefined);
+          },
+        ),
+      )
+      .subscribe();
   }
 
   vaciar(): void {
-    this.aplicar(() => []);
+    this.lista.set([]);
+  }
+
+  private enviar(
+    id: number,
+  ): void {
+    const actividad =
+      this.buscarPorId(id);
+
+    if (!actividad) {
+      return;
+    }
+
+    this.api
+      .actualizar(id, {
+        titulo:
+          actividad.titulo,
+        descripcion:
+          actividad.descripcion,
+        prioridad:
+          actividad.prioridad,
+        completada:
+          actividad.estado ===
+          'completada',
+      })
+      .pipe(
+        catchError(
+          (e: unknown) => {
+            this.error.set(
+              mensajeDe(e),
+            );
+
+            return of(null);
+          },
+        ),
+      )
+      .subscribe();
+  }
+
+  private deshacer(
+    id: number,
+    e: unknown,
+  ) {
+    this.error.set(
+      mensajeDe(e),
+    );
+
+    this.lista.update(
+      (actual) =>
+        actual.filter(
+          (a) => a.id !== id,
+        ),
+    );
+
+    return of(null);
+  }
+
+  private reemplazar(
+    provisional: number,
+    guardada: Actividad,
+  ): void {
+    this.lista.update(
+      (actual) =>
+        actual.map((a) =>
+          a.id === provisional
+            ? guardada
+            : a,
+        ),
+    );
+  }
+
+  private aplicarLocal(
+    id: number,
+    cambios: Partial<Actividad>,
+  ): void {
+    this.lista.update(
+      (actual) =>
+        actual.map((a) =>
+          a.id === id
+            ? {
+                ...a,
+                ...cambios,
+              }
+            : a,
+        ),
+    );
   }
 
   private tituloAceptable(
@@ -281,7 +430,7 @@ export class ActividadesService {
     );
   }
 
-    private siguienteId(): number {
+  private siguienteId(): number {
     return (
       this.lista().reduce(
         (mayor, a) =>
@@ -294,54 +443,18 @@ export class ActividadesService {
     );
   }
 
-  private aplicar(
-    cambio: (
-      actual: Actividad[],
-    ) => Actividad[],
-  ): void {
-    this.lista.update(cambio);
-
-    this.guardar();
-  }
-
-  private guardar(): void {
-    this.sinGuardar.set(
-      !this.almacen.guardar(
-        CLAVE,
-        this.lista(),
-      ),
-    );
-  }
-
-  private cargar(): void {
-    if (!this.almacen.existe(CLAVE)) {
-      return;
-    }
-
-    const valor =
-      this.almacen.leer(CLAVE);
-
-    if (!esColeccionActividades(valor)) {
-      this.aviso.set(
-        'Lo que había guardado no se pudo leer. Empiezas con las actividades de ejemplo.',
-      );
-
-      return;
-    }
-
-    this.lista.set(
-      valor.map((a) => ({ ...a })),
-    );
-  }
-
   private siguienteEstado(
     estado: EstadoActividad,
   ): EstadoActividad {
-    if (estado === 'pendiente') {
+    if (
+      estado === 'pendiente'
+    ) {
       return 'en_progreso';
     }
 
-    if (estado === 'en_progreso') {
+    if (
+      estado === 'en_progreso'
+    ) {
       return 'completada';
     }
 

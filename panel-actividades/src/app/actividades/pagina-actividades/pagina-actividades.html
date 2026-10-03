@@ -3,17 +3,6 @@
     Tablero de prioridades
   </h2>
 
-  @if (aviso()) {
-  <p class="aviso" role="status">
-    {{ aviso() }}
-  </p>
-}
-
-  @if (sinGuardar()) {
-   <p class="aviso" role="status">
-      No se pudo guardar. Tus cambios se perderán al cerrar.
-   </p>
- }
 
   @if (seleccionada(); as elegida) {
     <p class="seleccion">
@@ -57,6 +46,33 @@
     >
       Vaciar el tablero
     </button>
+
+    @if (cargando()) {
+
+  <p
+    class="cargando"
+    role="status"
+  >
+    Cargando actividades…
+  </p>
+
+} @else if (errorCarga()) {
+
+  <p
+    class="error"
+    role="alert"
+  >
+    {{ errorCarga() }}
+  </p>
+
+  <button
+    type="button"
+    (click)="recargar()"
+  >
+    Reintentar
+  </button>
+
+}
 
     <app-lista-actividades
       [actividades]="visibles()"
