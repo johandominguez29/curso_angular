@@ -23,13 +23,33 @@
           Creada el {{ a.creadaEn }}
         </p>
 
-        <button
-  type="button"
-  [attr.aria-label]="'Eliminar ' + a.titulo"
-  (click)="eliminar()"
->
-  Eliminar
-</button>
+        @if (a.descripcion) {
+          <p class="descripcion">
+            {{ a.descripcion }}
+          </p>
+        }
+
+        <div class="acciones">
+          <a
+            [routerLink]="[
+              '/actividades',
+              a.id,
+              'editar'
+            ]"
+          >
+            Editar
+          </a>
+
+          <button
+            type="button"
+            [attr.aria-label]="
+              'Eliminar ' + a.titulo
+            "
+            (click)="eliminar()"
+          >
+            Eliminar
+          </button>
+        </div>
       </article>
 
     }
@@ -44,7 +64,7 @@
       </h2>
 
       <p>
-        Puede que se eliminara
+        Puede que se eliminara,
         o que el enlace sea antiguo.
       </p>
     </div>
@@ -59,8 +79,7 @@
       </h2>
 
       <p>
-        El identificador de una actividad
-        es un número.
+        El identificador de una actividad es un número.
       </p>
     </div>
 
