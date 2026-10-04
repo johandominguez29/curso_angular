@@ -36,6 +36,7 @@ import { FiltrosActividades } from '../filtros-actividades/filtros-actividades';
 import { PanelSeccion } from '../../compartido/panel-seccion/panel-seccion';
 import { ActividadesService } from '../actividades.service';
 import { ActividadesApi } from '../../api/actividades-api';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-pagina-actividades',
@@ -44,6 +45,7 @@ import { ActividadesApi } from '../../api/actividades-api';
     ResumenActividades,
     ListaActividades,
     FiltrosActividades,
+    RouterLink,
     PanelSeccion,
   ],
   templateUrl: './pagina-actividades.html',

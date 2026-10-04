@@ -139,7 +139,10 @@ function aCuerpoRemoto(
   };
 }
 
-@Injectable()
+@Injectable({
+  providedIn: 'root',
+})
+
 export class ActividadesApi {
 
     buscar(

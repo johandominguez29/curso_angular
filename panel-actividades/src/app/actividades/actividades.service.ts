@@ -357,22 +357,15 @@ export class ActividadesService {
   }
 
   private deshacer(
-    id: number,
-    e: unknown,
-  ) {
-    this.error.set(
-      mensajeDe(e),
-    );
+  id: number,
+  e: unknown,
+) {
+  this.error.set(
+    mensajeDe(e),
+  );
 
-    this.lista.update(
-      (actual) =>
-        actual.filter(
-          (a) => a.id !== id,
-        ),
-    );
-
-    return of(null);
-  }
+  return of(null);
+}
 
   private reemplazar(
     provisional: number,

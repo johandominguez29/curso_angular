@@ -111,16 +111,24 @@ novalidate
   </fieldset>
 
   <div class="acciones">
-   <button
-  type="button"
-  [disabled]="!tieneCambios()"
-  (click)="restablecer()"
->
-  Descartar cambios
-</button>
 
-    <a routerLink="/actividades">
-      Cancelar
-    </a>
-  </div>
+  <button
+    type="submit"
+  >
+    Guardar actividad
+  </button>
+
+  <button
+    type="button"
+    [disabled]="!tieneCambios()"
+    (click)="restablecer()"
+  >
+    Descartar cambios
+  </button>
+
+  <a routerLink="/actividades">
+    Cancelar
+  </a>
+
+</div>
 </form>

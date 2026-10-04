@@ -275,11 +275,11 @@ export class FormularioActividad {
       });
 
       this.router.navigate(
-        ['/actividades', creada.id],
-        {
-          replaceUrl: true,
-        },
-      );
+  ['/actividades'],
+  {
+    replaceUrl: true,
+  },
+);
 
       return;
     }
@@ -306,11 +306,12 @@ export class FormularioActividad {
     });
 
     this.router.navigate(
-      ['/actividades', Number(id)],
-      {
-        replaceUrl: true,
-      },
-    );
+  ['/actividades'],
+  {
+    replaceUrl: true,
+  },
+);
+    
   }
 
   protected restablecer(): void {
